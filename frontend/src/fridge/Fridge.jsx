@@ -2,6 +2,7 @@ import { marked } from 'marked';
 import { useEffect, useState } from 'react';
 
 export default function Fridge() {
+  const API_BASE = import.meta.env.VITE_BACKEND_API || 'http://localhost:5000';
   const [deepIngredient, setDeepIngredient] = useState('');
   const [normalIngredient, setNormalIngredient] = useState('');
   // Initialize from localStorage immediately so data persists across refreshes
@@ -76,7 +77,7 @@ export default function Fridge() {
     setIsPosting(true);
     setPostError('');
     try {
-      const res = await fetch('http://localhost:5000/api/ingredients-json', {
+      const res = await fetch(`${API_BASE}/api/ingredients-json`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -102,7 +103,7 @@ export default function Fridge() {
     setMdRaw('');
     setMdHtml('');
     try {
-      const res = await fetch('http://localhost:5000/api/ingredients-md', {
+      const res = await fetch(`${API_BASE}/api/ingredients-md`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
