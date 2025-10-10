@@ -1,3 +1,4 @@
+import { marked } from 'marked';
 import { useEffect, useState } from 'react';
 
 export default function Fridge() {
@@ -23,6 +24,10 @@ export default function Fridge() {
   const [apiResponse, setApiResponse] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
   const [postError, setPostError] = useState('');
+  const [isPostingMd, setIsPostingMd] = useState(false);
+  const [mdError, setMdError] = useState('');
+  const [mdRaw, setMdRaw] = useState('');
+  const [mdHtml, setMdHtml] = useState('');
 
   // (No need to load on mount since we initialize from localStorage above)
 
@@ -71,7 +76,7 @@ export default function Fridge() {
     setIsPosting(true);
     setPostError('');
     try {
-      const res = await fetch('http://localhost:5000/api/ingredients', {
+      const res = await fetch('http://localhost:5000/api/ingredients-json', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,6 +92,35 @@ export default function Fridge() {
       setPostError(err.message || 'Failed to send request');
     } finally {
       setIsPosting(false);
+    }
+  };
+
+  // Send current ingredients to Markdown endpoint and render
+  const handleSendToServerMd = async () => {
+    setIsPostingMd(true);
+    setMdError('');
+    setMdRaw('');
+    setMdHtml('');
+    try {
+      const res = await fetch('http://localhost:5000/api/ingredients-md', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deepIngredients, normalIngredients }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        throw new Error(text || `Request failed with status ${res.status}`);
+      }
+      setMdRaw(text);
+      // Convert Markdown to HTML safely using marked
+      const html = marked.parse(text);
+      setMdHtml(html);
+    } catch (err) {
+      setMdError(err.message || 'Failed to send request');
+    } finally {
+      setIsPostingMd(false);
     }
   };
 
@@ -141,6 +175,13 @@ export default function Fridge() {
             >
               {isPosting ? 'Sending…' : 'Send to server'}
             </button>
+            <button
+              onClick={handleSendToServerMd}
+              disabled={isPostingMd}
+              className={`btn ${isPostingMd ? 'btn-secondary' : 'btn-outline-success'}`}
+            >
+              {isPostingMd ? 'Fetching…' : 'Get Markdown Recipe'}
+            </button>
           </div>
         </div>
       </div>
@@ -192,6 +233,31 @@ export default function Fridge() {
             readOnly
             value={apiResponse ? JSON.stringify(apiResponse, null, 2) : ''}
             placeholder="Send to server to see response..."
+            className="form-control font-monospace"
+            rows={8}
+          />
+        </div>
+      </div>
+
+      {/* Markdown response */}
+      <div className="card mb-4">
+        <div className="card-header">Recipe (Markdown)</div>
+        <div className="card-body">
+          {mdError && (
+            <div className="alert alert-danger mb-3" role="alert">
+              Error: {mdError}
+            </div>
+          )}
+          {mdHtml ? (
+            <div className="mb-3" dangerouslySetInnerHTML={{ __html: mdHtml }} />
+          ) : (
+            <p className="text-muted">Use "Get Markdown Recipe" to see a rendered recipe here.</p>
+          )}
+          <label className="form-label">Raw Markdown</label>
+          <textarea
+            readOnly
+            value={mdRaw}
+            placeholder="Markdown response will appear here..."
             className="form-control font-monospace"
             rows={8}
           />
