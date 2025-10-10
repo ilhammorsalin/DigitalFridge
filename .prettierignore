@@ -1,0 +1,5 @@
+# Ignore build output and lock files
+node_modules/
+dist/
+build/
+.eslintcache
