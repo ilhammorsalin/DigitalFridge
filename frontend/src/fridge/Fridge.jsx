@@ -20,6 +20,9 @@ export default function Fridge() {
       return [];
     }
   });
+  const [apiResponse, setApiResponse] = useState(null);
+  const [isPosting, setIsPosting] = useState(false);
+  const [postError, setPostError] = useState('');
 
   // (No need to load on mount since we initialize from localStorage above)
 
@@ -47,173 +50,153 @@ export default function Fridge() {
     }
   };
 
+  // Clear localStorage and reset lists/inputs
+  const handleClear = () => {
+    try {
+      localStorage.removeItem('deepIngredients');
+      localStorage.removeItem('normalIngredients');
+    } catch {
+      // ignore
+    }
+    setDeepIngredients([]);
+    setNormalIngredients([]);
+    setDeepIngredient('');
+    setNormalIngredient('');
+    setApiResponse(null);
+    setPostError('');
+  };
+
+  // Send current ingredients to backend API and capture response
+  const handleSendToServer = async () => {
+    setIsPosting(true);
+    setPostError('');
+    try {
+      const res = await fetch('http://localhost:5000/api/ingredients', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ deepIngredients, normalIngredients }),
+      });
+      if (!res.ok) {
+        throw new Error(`Request failed with status ${res.status}`);
+      }
+      const data = await res.json();
+      setApiResponse(data);
+    } catch (err) {
+      setPostError(err.message || 'Failed to send request');
+    } finally {
+      setIsPosting(false);
+    }
+  };
+
   return (
-    <div
-      style={{
-        padding: '24px',
-        width: '100vw',
-        minHeight: '100vh',
-        margin: '0',
-        backgroundColor: 'white',
-      }}
-    >
-      <h1
-        style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          marginBottom: '24px',
-          textAlign: 'center',
-          color: '#1f2937',
-        }}
-      >
-        Digital Fridge
-      </h1>
+    <div className="container py-4">
+      <h1 className="text-center mb-4">Digital Fridge</h1>
+      {/* Input form card */}
+      <div className="card mb-4">
+        <div className="card-header">Add Ingredients</div>
+        <div className="card-body">
+          <div className="row g-3 mb-3">
+            <div className="col-12 col-md-6">
+              <label htmlFor="deep" className="form-label">
+                Deep
+              </label>
+              <input
+                id="deep"
+                type="text"
+                value={deepIngredient}
+                onChange={(e) => setDeepIngredient(e.target.value)}
+                className="form-control"
+                placeholder="Enter deep ingredient..."
+              />
+            </div>
 
-      {/* Deep Section */}
-      <div style={{ marginBottom: '24px' }}>
-        <label
-          htmlFor="deep"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '500',
-            color: '#374151',
-            marginBottom: '8px',
-          }}
-        >
-          Deep
-        </label>
-        <input
-          id="deep"
-          type="text"
-          value={deepIngredient}
-          onChange={(e) => setDeepIngredient(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '8px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
-            fontSize: '16px',
-            color: '#111827',
-            backgroundColor: '#ffffff',
-            outline: 'none',
-          }}
-          placeholder="Enter deep ingredient..."
-        />
+            <div className="col-12 col-md-6">
+              <label htmlFor="normal" className="form-label">
+                Normal
+              </label>
+              <input
+                id="normal"
+                type="text"
+                value={normalIngredient}
+                onChange={(e) => setNormalIngredient(e.target.value)}
+                className="form-control"
+                placeholder="Enter normal ingredient..."
+              />
+            </div>
+          </div>
+
+          <div className="d-flex gap-2 flex-wrap">
+            <button onClick={handleStore} className="btn btn-primary">
+              Store
+            </button>
+            <button onClick={handleClear} className="btn btn-outline-danger">
+              Clear
+            </button>
+            <button
+              onClick={handleSendToServer}
+              disabled={isPosting}
+              className={`btn ${isPosting ? 'btn-secondary' : 'btn-success'}`}
+            >
+              {isPosting ? 'Sending…' : 'Send to server'}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Normal Section */}
-      <div style={{ marginBottom: '24px' }}>
-        <label
-          htmlFor="normal"
-          style={{
-            display: 'block',
-            fontSize: '14px',
-            fontWeight: '500',
-            color: '#374151',
-            marginBottom: '8px',
-          }}
-        >
-          Normal
-        </label>
-        <input
-          id="normal"
-          type="text"
-          value={normalIngredient}
-          onChange={(e) => setNormalIngredient(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '8px 12px',
-            border: '1px solid #d1d5db',
-            borderRadius: '6px',
-            fontSize: '16px',
-            color: '#111827',
-            backgroundColor: '#ffffff',
-            outline: 'none',
-          }}
-          placeholder="Enter normal ingredient..."
-        />
-      </div>
-
-      {/* Store Button */}
-      <button
-        onClick={handleStore}
-        style={{
-          width: '100%',
-          backgroundColor: '#3b82f6',
-          color: 'white',
-          fontWeight: '500',
-          padding: '8px 16px',
-          borderRadius: '6px',
-          border: 'none',
-          cursor: 'pointer',
-          transition: 'background-color 0.2s',
-        }}
-        onMouseOver={(e) => {
-          if (e.target instanceof HTMLButtonElement) {
-            e.target.style.backgroundColor = '#2563eb';
-          }
-        }}
-        onMouseOut={(e) => {
-          if (e.target instanceof HTMLButtonElement) {
-            e.target.style.backgroundColor = '#3b82f6';
-          }
-        }}
-      >
-        Store
-      </button>
-
-      {/* Deep Ingredients List */}
-      {deepIngredients.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <h3
-            style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '8px' }}
-          >
-            Deep Ingredients:
-          </h3>
-          <ul
-            style={{
-              listStyleType: 'disc',
-              paddingLeft: '20px',
-              backgroundColor: '#f9fafb',
-              padding: '12px',
-              borderRadius: '6px',
-            }}
-          >
-            {deepIngredients.map((ingredient, index) => (
-              <li key={index} style={{ color: '#374151', marginBottom: '4px' }}>
-                {ingredient}
-              </li>
-            ))}
-          </ul>
+      {/* Lists side-by-side on larger screens */}
+      {(deepIngredients.length > 0 || normalIngredients.length > 0) && (
+        <div className="row g-3 mb-4">
+          {deepIngredients.length > 0 && (
+            <div className="col-12 col-md-6">
+              <div className="card h-100">
+                <div className="card-header">Deep Ingredients</div>
+                <ul className="list-group list-group-flush">
+                  {deepIngredients.map((ingredient, index) => (
+                    <li key={index} className="list-group-item">
+                      {ingredient}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+          {normalIngredients.length > 0 && (
+            <div className="col-12 col-md-6">
+              <div className="card h-100">
+                <div className="card-header">Normal Ingredients</div>
+                <ul className="list-group list-group-flush">
+                  {normalIngredients.map((ingredient, index) => (
+                    <li key={index} className="list-group-item">
+                      {ingredient}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Normal Ingredients List */}
-      {normalIngredients.length > 0 && (
-        <div style={{ marginTop: '24px' }}>
-          <h3
-            style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '8px' }}
-          >
-            Normal Ingredients:
-          </h3>
-          <ul
-            style={{
-              listStyleType: 'disc',
-              paddingLeft: '20px',
-              backgroundColor: '#f9fafb',
-              padding: '12px',
-              borderRadius: '6px',
-            }}
-          >
-            {normalIngredients.map((ingredient, index) => (
-              <li key={index} style={{ color: '#374151', marginBottom: '4px' }}>
-                {ingredient}
-              </li>
-            ))}
-          </ul>
+      {/* API response */}
+      <div className="card mb-4">
+        <div className="card-header">API Response</div>
+        <div className="card-body">
+          {postError && (
+            <div className="alert alert-danger mb-3" role="alert">
+              Error: {postError}
+            </div>
+          )}
+          <textarea
+            readOnly
+            value={apiResponse ? JSON.stringify(apiResponse, null, 2) : ''}
+            placeholder="Send to server to see response..."
+            className="form-control font-monospace"
+            rows={8}
+          />
         </div>
-      )}
+      </div>
     </div>
   );
 }
