@@ -1,18 +1,11 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 
 // Middleware
 app.use(express.json());
-// Allow frontend dev server to call the API
-app.use(
-  cors({
-    origin: 'http://localhost:5173',
-  })
-);
 
 // Routes
 app.get('/health', (req, res) => {
