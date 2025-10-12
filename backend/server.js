@@ -1,11 +1,28 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 
 // Middleware
 app.use(express.json());
+// CORS: allow the deployed frontend (and optional .env override)
+const allowedOrigins = ['https://digitalfridge-frontend.onrender.com', process.env.FRONTEND_ORIGIN]
+  .filter(Boolean)
+  .map((o) => o.replace(/\/$/, ''));
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow requests without Origin header (e.g., curl, same-origin)
+      if (!origin) return callback(null, true);
+      const normalized = origin.replace(/\/$/, '');
+      if (allowedOrigins.includes(normalized)) return callback(null, true);
+      return callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
+  })
+);
 
 // Routes
 app.get('/health', (req, res) => {
