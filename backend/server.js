@@ -8,7 +8,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 // CORS: allow the deployed frontend (and optional .env override)
-const allowedOrigins = ['https://digitalfridge-frontend.onrender.com', process.env.FRONTEND_ORIGIN]
+const allowedOrigins = ['https://digitalfridge-frontend.onrender.com']
   .filter(Boolean)
   .map((o) => o.replace(/\/$/, ''));
 
