@@ -91,7 +91,3 @@ npm --prefix frontend run build
 - Rate limiting / auth on API
 - OpenAPI spec & testing (unit + e2e)
 - TypeScript migration
-
----
-
-MIT License (adjust if needed)
