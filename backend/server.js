@@ -1,11 +1,11 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+require('dotenv').config(); // package to import and config for ENVIROMENT VARIABLES
+const express = require('express'); // EXPRESS is a package to configure REST requests
+const cors = require('cors'); // CORS allows to configure cross origin resource sharing
+const { GoogleGenerativeAI } = require('@google/generative-ai'); // CONFIG for GEMINI AI
 
 const app = express();
 
-// Middleware
+// Middleware - 
 app.use(express.json());
 // CORS: allow the deployed frontend (and optional .env override)
 const allowedOrigins = ['https://digitalfridge-frontend.onrender.com']
@@ -25,8 +25,31 @@ app.use(
 );
 
 // Routes
+app.get('/', (req, res) => {
+  res.send('welcome to the default page');
+});
+
 app.get('/health', (req, res) => {
-  res.send('api is running lesgooooooooo');
+  const timestamp = new Date().toISOString();
+  const hasApiKey = !!process.env.GOOGLE_API_KEY;
+  
+  const healthStatus = {
+    status: 'healthy',
+    timestamp,
+    api: {
+      running: true,
+      port: process.env.PORT || 5000
+    },
+    gemini: {
+      configured: hasApiKey,
+      model: hasApiKey ? 'gemini-2.5-flash' : 'unavailable'
+    },
+    uptime: process.uptime()
+  };
+  
+  console.log(`[${timestamp}] API Status: Running, Gemini: ${hasApiKey ? 'Configured' : 'Not configured'}`);
+  
+  res.json(healthStatus);
 });
 
 // Helper to generate a concise recipe using Gemini (with safe fallback)

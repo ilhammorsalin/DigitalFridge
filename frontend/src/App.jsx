@@ -1,4 +1,4 @@
-import Fridge from "./fridge/Fridge"
+import Fridge from "./Fridge"
 
 function App() {
   
