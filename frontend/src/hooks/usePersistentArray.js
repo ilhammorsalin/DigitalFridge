@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
-import { loadArray, saveArray } from '@utils/storage';
+import { useEffect, useState } from 'react'; // import React hooks for state and side-effects
+import { loadArray, saveArray } from '@utils/storage'; // import helpers that read/write localStorage
 
-export function usePersistentArray(key, initial = []) {
-  const [value, setValue] = useState(() => loadArray(key) ?? initial);
+export function usePersistentArray(key, initial = []) { // define a custom hook that persists an array by `key`
+  const [value, setValue] = useState(() => loadArray(key) ?? initial); // initialize from storage if present, else use `initial`
 
-  useEffect(() => {
-    saveArray(key, value);
-  }, [key, value]);
+  useEffect(() => { // run a side-effect whenever `key` or `value` changes
+    saveArray(key, value); // write the current array to localStorage under `key`
+  }, [key, value]); // dependencies: rerun effect if key or value changes
 
-  return [value, setValue];
-}
+  return [value, setValue]; // expose the stateful array and its setter like useState
+} // end usePersistentArray
